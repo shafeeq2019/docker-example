@@ -1,25 +1,48 @@
 const express = require('express')
 const cors = require('cors')
+const { Pool, Client } = require('pg');
 
 const app = express()
-
 app.use(cors())
 
-app.get('/', (req, res) => {
-  res.json([
-    {
-      "id":"1",
-      "title":"Book Review: The Name of the Wind"
-    },
-    {
-      "id":"2",
-      "title":"Game Review: Pokemon Brillian Diamond"
-    },
-    {
-      "id":"3",
-      "title":"Show Review: Alice in Borderland"
-    }
-  ])
+const dbConfig = {
+  user: 'postgres',
+  host: 'docker-example-app-db-1',
+  database: 'postgres',
+  password: '123456',
+  port: 5432, // Standard-PostgreSQL-Port
+};
+
+const pool = new Pool(dbConfig);
+
+pool.connect((err, client, release) => {
+  if (err) {
+    return console.error('Error connecting to the database', err);
+  }
+  console.log('Successfully connected to the database');
+  if (client) client.release();
+});
+
+
+async function performQuery(sqlObj) {
+  let client;
+  try {
+    client = await pool.connect();
+    const result = await client.query(sqlObj);
+    return result;
+  } catch (err) {
+    LOGGER.error('Error executing query:', err);
+  } finally {
+    if (client) client.release();
+  }
+}
+
+app.get('/', async (req, res) => {
+  const data = await performQuery({
+    text: 'SELECT * FROM blogs;'
+  });
+  const blogs = data.rows;
+  res.send(blogs)
 })
 
 app.listen(4000, () => {

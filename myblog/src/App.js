@@ -14,7 +14,7 @@ function App() {
       <header className="App-header">
         <h1>all blogs</h1>
         {blogs && blogs.map(blog => (
-          <div key={blog.id}>{blog.title}</div>
+          <div key={blog.id}><b>{blog.category}</b> : {blog.text}</div>
         ))}
       </header>
     </div>
